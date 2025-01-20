@@ -39,15 +39,14 @@ def extract_text_from_file(file, file_type):
 
 # Fuzzy Matching を用いて類似語を検出する関数
 def find_similar_terms(text, terms, threshold):
-    # ピリオドや句読点で文章を分割
-    sentences = [sentence.strip() for sentence in text.split('.')]
     detected_terms = []
 
-    for sentence in sentences:
-        matches = process.extract(sentence, terms, scorer=fuzz.partial_ratio, limit=10)
+    words = text.split()
+    for word in words:
+        matches = process.extract(word, terms, scorer=fuzz.partial_ratio, limit=10)
         for match in matches:
             if match[1] >= threshold and match[1] < 100:  # Include matches above the threshold but exclude exact matches
-                detected_terms.append((sentence, match[0], match[1]))
+                detected_terms.append((word, match[0], match[1]))
 
     return detected_terms
 
