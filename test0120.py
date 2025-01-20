@@ -45,6 +45,38 @@ def find_similar_terms(text, terms, threshold):
     return detected_terms
 
 # 修正を適用して新しい Word ファイルを作成する関数
+def create_corrected_word_file_with_formatting(original_text, corrections):
+    doc = Document()
+    for paragraph_text in original_text.split("\n"):
+        paragraph = doc.add_paragraph()
+        start_index = 0
+
+        # Apply corrections with red formatting
+        for incorrect, correct in corrections:
+            while incorrect in paragraph_text[start_index:]:
+                start_index = paragraph_text.find(incorrect, start_index)
+                end_index = start_index + len(incorrect)
+
+                # Add text before the match
+                paragraph.add_run(paragraph_text[:start_index])
+
+                # Add the corrected text in red
+                run = paragraph.add_run(correct)
+                run.font.color.rgb = (255, 0, 0)  # Red color
+
+                # Update the remaining text
+                paragraph_text = paragraph_text[end_index:]
+                start_index = 0
+
+        # Add any remaining text
+        paragraph.add_run(paragraph_text)
+
+    output = BytesIO()
+    doc.save(output)
+    output.seek(0)
+    return output
+
+# 修正を適用して新しい Word ファイルを作成する関数
 def create_correction_table(detected):
     correction_table = pd.DataFrame(detected, columns=["原稿内の語", "類似する用語", "類似度"])
     return correction_table
@@ -83,6 +115,8 @@ if word_file and (terms_file or correction_file or kanji_file):
     file_type = word_file.name.split(".")[-1]
     original_text = extract_text_from_file(word_file, file_type)
 
+    corrections = []
+
     # 用語集がアップロードされている場合
     if terms_file:
         try:
@@ -98,6 +132,7 @@ if word_file and (terms_file or correction_file or kanji_file):
                 st.success("類似語が検出されました！")
                 correction_table = create_correction_table(detected)
                 st.dataframe(correction_table)
+                corrections.extend([(original, correct) for original, correct, _ in detected])
 
                 # 修正箇所を表形式でダウンロード
                 output = BytesIO()
@@ -120,11 +155,12 @@ if word_file and (terms_file or correction_file or kanji_file):
     if correction_file:
         try:
             correction_df = load_excel(correction_file)
-            original_text, corrections = apply_corrections_with_table(original_text, correction_df)
+            original_text, corrections_from_table = apply_corrections_with_table(original_text, correction_df)
+            corrections.extend(corrections_from_table)
             st.success("正誤表を適用しました！")
-            if corrections:
+            if corrections_from_table:
                 st.write("修正内容:")
-                corrections_df = pd.DataFrame(corrections, columns=["誤った用語", "正しい用語"])
+                corrections_df = pd.DataFrame(corrections_from_table, columns=["誤った用語", "正しい用語"])
                 st.dataframe(corrections_df)
 
                 # 修正箇所をダウンロード
@@ -146,6 +182,7 @@ if word_file and (terms_file or correction_file or kanji_file):
         try:
             kanji_df = load_excel(kanji_file)
             original_text, kanji_corrections = apply_kanji_table(original_text, kanji_df)
+            corrections.extend(kanji_corrections)
             st.success("利用漢字表を適用しました！")
             if kanji_corrections:
                 st.write("修正内容:")
@@ -165,6 +202,15 @@ if word_file and (terms_file or correction_file or kanji_file):
 
         except Exception as e:
             st.error(f"利用漢字表の処理中にエラーが発生しました: {e}")
+
+    # 修正済みファイルをWord形式でダウンロード
+    corrected_file = create_corrected_word_file_with_formatting(original_text, corrections)
+    st.download_button(
+        label="修正済みファイルをダウンロード",
+        data=corrected_file.getvalue(),
+        file_name="corrected_document.docx",
+        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    )
 
 else:
     st.warning("原稿ファイルと、用語集、正誤表、利用漢字表のいずれかをアップロードしてください！")
