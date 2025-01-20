@@ -1,0 +1,7 @@
+streamlit
+pandas
+rapidfuzz
+python-docx
+pydocx
+PyPDF2
+xlsxwriter
