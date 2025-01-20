@@ -4,26 +4,7 @@ from docx import Document
 from io import BytesIO
 from pydocx import PyDocX  # .doc ファイルを扱うためのライブラリ
 import streamlit as st
-
-# Install necessary packages
-try:
-    from PyPDF2 import PdfReader  # PDFからテキストを抽出するためのライブラリ
-except ImportError:
-    !pip install PyPDF2
-    from PyPDF2 import PdfReader
-
-try:
-    import pyngrok
-except ImportError:
-    !pip install pyngrok
-    import pyngrok
-
-# Install openpyxl to fix missing dependency issue
-try:
-    import openpyxl
-except ImportError:
-    !pip install openpyxl
-    import openpyxl
+from PyPDF2 import PdfReader  # PDFからテキストを抽出するためのライブラリ
 
 # Excel ファイルを読み込む関数
 def load_excel(file):
@@ -154,7 +135,3 @@ if word_file and terms_file:
 
 else:
     st.warning("原稿ファイルと用語集ファイルの両方をアップロードしてください！")
-
-st.write("ColabでこのStreamlitアプリを実行する場合は、以下のコマンドを使用してください:")
-st.code("""!pip install pyngrok
-!streamlit run app.py & npx localtunnel --port 8501""")
