@@ -39,7 +39,7 @@ def find_similar_terms(text, terms, threshold):
         # Extract multiple matches with a limit for better matching accuracy
         matches = process.extract(word, terms, scorer=fuzz.partial_ratio, limit=10)
         for match in matches:
-            if match[1] >= threshold:  # Include matches above the threshold
+            if match[1] >= threshold and match[1] < 100:  # Include matches above the threshold but exclude exact matches
                 detected_terms.append((word, match[0], match[1]))
 
     return detected_terms
