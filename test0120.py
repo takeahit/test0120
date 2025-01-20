@@ -52,8 +52,9 @@ def create_correction_table(detected):
 # 正誤表を使用して修正を適用する関数
 def apply_corrections_with_table(text, correction_df):
     required_columns = ['誤った用語', '正しい用語']
-    if not all(col in correction_df.columns for col in required_columns):
-        raise ValueError(f"正誤表に必要な列が不足しています: {required_columns}")
+    missing_columns = [col for col in required_columns if col not in correction_df.columns]
+    if missing_columns:
+        raise ValueError(f"正誤表に必要な列が不足しています: {missing_columns}")
 
     for _, row in correction_df.iterrows():
         incorrect = row['誤った用語']
@@ -64,8 +65,9 @@ def apply_corrections_with_table(text, correction_df):
 # 利用漢字表を使用して修正を適用する関数
 def apply_kanji_table(text, kanji_df):
     required_columns = ['ひらがな', '漢字']
-    if not all(col in kanji_df.columns for col in required_columns):
-        raise ValueError(f"利用漢字表に必要な列が不足しています: {required_columns}")
+    missing_columns = [col for col in required_columns if col not in kanji_df.columns]
+    if missing_columns:
+        raise ValueError(f"利用漢字表に必要な列が不足しています: {missing_columns}")
 
     for _, row in kanji_df.iterrows():
         hiragana = row['ひらがな']
@@ -99,7 +101,7 @@ if word_file and terms_file:
         original_text = extract_text_from_file(word_file, file_type)
 
         # 類似度の閾値を入力
-        threshold = st.slider("類似度の閾値を設定してください (50-100):", min_value=50, max_value=99, value=70)
+        threshold = st.slider("類似度の閾値を設定してください (50-100):", min_value=50, max_value=100, value=80)
         detected = find_similar_terms(original_text, terms, threshold)
 
         # 結果を表示
@@ -126,6 +128,7 @@ if word_file and terms_file:
         if correction_file:
             try:
                 correction_df = load_excel(correction_file)
+                st.info(f"正誤表の列名: {list(correction_df.columns)}")
                 original_text = apply_corrections_with_table(original_text, correction_df)
                 st.success("正誤表を適用しました！")
             except Exception as e:
@@ -135,6 +138,7 @@ if word_file and terms_file:
         if kanji_file:
             try:
                 kanji_df = load_excel(kanji_file)
+                st.info(f"利用漢字表の列名: {list(kanji_df.columns)}")
                 original_text = apply_kanji_table(original_text, kanji_df)
                 st.success("利用漢字表を適用しました！")
             except Exception as e:
