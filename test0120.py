@@ -109,9 +109,9 @@ def apply_kanji_table(text, kanji_df):
     return text, corrections
 
 # Streamlit アプリケーション
-st.title("南江堂様用用語チェックサービス（笑）")
+st.markdown("<h1 style='text-align: center;'>南江堂様用用語チェックサービス（笑）</h1>", unsafe_allow_html=True)
 
-st.write("以下のファイルを個別にアップロードしてください:")
+st.write("以下のファイルを個別にアップロードしてください（正誤表と利用漢字表は実質的には同じことをするものです）:")
 word_file = st.file_uploader("原稿ファイル (Word, DOC, PDF):", type=["docx", "doc", "pdf"])
 terms_file = st.file_uploader("用語集ファイル (Excel, 任意):", type=["xlsx"])
 correction_file = st.file_uploader("正誤表ファイル (Excel, 任意):", type=["xlsx"])
