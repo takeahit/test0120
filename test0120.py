@@ -104,7 +104,6 @@ if word_file and terms_file:
             output = BytesIO()
             with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
                 correction_table.to_excel(writer, index=False, sheet_name="Corrections")
-                writer.save()
             st.download_button(
                 label="修正箇所をダウンロード",
                 data=output.getvalue(),
