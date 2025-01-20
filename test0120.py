@@ -26,7 +26,13 @@ def extract_text_from_file(file, file_type):
         reader = PdfReader(file)
         text = ""
         for page in reader.pages:
-            text += page.extract_text() + "\n"
+            page_text = page.extract_text()
+            # 改行と複数スペースを削除
+            page_text = page_text.replace("\n", " ").replace("\r", " ")
+            page_text = " ".join(page_text.split())
+            text += page_text + " "
+        # 全体をさらに正規化
+        text = text.strip()
         return text
     else:
         return ""
