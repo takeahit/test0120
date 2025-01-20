@@ -56,11 +56,14 @@ def apply_corrections_with_table(text, correction_df):
     if missing_columns:
         raise ValueError(f"正誤表に必要な列が不足しています: {missing_columns}")
 
+    corrections = []
     for _, row in correction_df.iterrows():
         incorrect = row['誤った用語']
         correct = row['正しい用語']
+        if incorrect in text:
+            corrections.append((incorrect, correct))
         text = text.replace(incorrect, correct)
-    return text
+    return text, corrections
 
 # 利用漢字表を使用して修正を適用する関数
 def apply_kanji_table(text, kanji_df):
@@ -69,11 +72,14 @@ def apply_kanji_table(text, kanji_df):
     if missing_columns:
         raise ValueError(f"利用漢字表に必要な列が不足しています: {missing_columns}")
 
+    corrections = []
     for _, row in kanji_df.iterrows():
         hiragana = row['ひらがな']
         kanji = row['漢字']
+        if hiragana in text:
+            corrections.append((hiragana, kanji))
         text = text.replace(hiragana, kanji)
-    return text
+    return text, corrections
 
 # Streamlit アプリケーション
 st.title("用語チェックアプリ")
@@ -101,7 +107,7 @@ if word_file and terms_file:
         original_text = extract_text_from_file(word_file, file_type)
 
         # 類似度の閾値を入力
-        threshold = st.slider("類似度の閾値を設定してください (50-100):", min_value=50, max_value=100, value=80)
+        threshold = st.slider("類似度の閾値を設定してください (50-99):", min_value=50, max_value=99, value=65)
         detected = find_similar_terms(original_text, terms, threshold)
 
         # 結果を表示
@@ -129,8 +135,24 @@ if word_file and terms_file:
             try:
                 correction_df = load_excel(correction_file)
                 st.info(f"正誤表の列名: {list(correction_df.columns)}")
-                original_text = apply_corrections_with_table(original_text, correction_df)
+                original_text, corrections = apply_corrections_with_table(original_text, correction_df)
                 st.success("正誤表を適用しました！")
+                if corrections:
+                    st.write("修正内容:")
+                    corrections_df = pd.DataFrame(corrections, columns=["誤った用語", "正しい用語"])
+                    st.dataframe(corrections_df)
+
+                    # 修正箇所をダウンロード
+                    output = BytesIO()
+                    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                        corrections_df.to_excel(writer, index=False, sheet_name="Corrections")
+                    st.download_button(
+                        label="正誤表修正箇所をダウンロード",
+                        data=output.getvalue(),
+                        file_name="corrections_from_table.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    )
+
             except Exception as e:
                 st.error(f"正誤表の処理中にエラーが発生しました: {e}")
 
@@ -139,8 +161,24 @@ if word_file and terms_file:
             try:
                 kanji_df = load_excel(kanji_file)
                 st.info(f"利用漢字表の列名: {list(kanji_df.columns)}")
-                original_text = apply_kanji_table(original_text, kanji_df)
+                original_text, kanji_corrections = apply_kanji_table(original_text, kanji_df)
                 st.success("利用漢字表を適用しました！")
+                if kanji_corrections:
+                    st.write("修正内容:")
+                    kanji_corrections_df = pd.DataFrame(kanji_corrections, columns=["ひらがな", "漢字"])
+                    st.dataframe(kanji_corrections_df)
+
+                    # 修正箇所をダウンロード
+                    output = BytesIO()
+                    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                        kanji_corrections_df.to_excel(writer, index=False, sheet_name="Kanji Corrections")
+                    st.download_button(
+                        label="利用漢字表修正箇所をダウンロード",
+                        data=output.getvalue(),
+                        file_name="kanji_corrections.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    )
+
             except Exception as e:
                 st.error(f"利用漢字表の処理中にエラーが発生しました: {e}")
 
