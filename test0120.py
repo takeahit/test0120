@@ -51,15 +51,9 @@ def create_correction_table(detected):
 
 # 正誤表を使用して修正を適用する関数
 def apply_corrections_with_table(text, correction_df):
-    required_columns = ['誤った用語', '正しい用語']
-    missing_columns = [col for col in required_columns if col not in correction_df.columns]
-    if missing_columns:
-        raise ValueError(f"正誤表に必要な列が不足しています: {missing_columns}")
-
     corrections = []
     for _, row in correction_df.iterrows():
-        incorrect = row['誤った用語']
-        correct = row['正しい用語']
+        incorrect, correct = row.iloc[0], row.iloc[1]  # Use the first column as "incorrect" and the second as "correct"
         if incorrect in text:
             corrections.append((incorrect, correct))
         text = text.replace(incorrect, correct)
@@ -67,15 +61,9 @@ def apply_corrections_with_table(text, correction_df):
 
 # 利用漢字表を使用して修正を適用する関数
 def apply_kanji_table(text, kanji_df):
-    required_columns = ['ひらがな', '漢字']
-    missing_columns = [col for col in required_columns if col not in kanji_df.columns]
-    if missing_columns:
-        raise ValueError(f"利用漢字表に必要な列が不足しています: {missing_columns}")
-
     corrections = []
     for _, row in kanji_df.iterrows():
-        hiragana = row['ひらがな']
-        kanji = row['漢字']
+        hiragana, kanji = row.iloc[0], row.iloc[1]  # Use the first column as "hiragana" and the second as "kanji"
         if hiragana in text:
             corrections.append((hiragana, kanji))
         text = text.replace(hiragana, kanji)
@@ -134,7 +122,6 @@ if word_file and terms_file:
         if correction_file:
             try:
                 correction_df = load_excel(correction_file)
-                st.info(f"正誤表の列名: {list(correction_df.columns)}")
                 original_text, corrections = apply_corrections_with_table(original_text, correction_df)
                 st.success("正誤表を適用しました！")
                 if corrections:
@@ -160,7 +147,6 @@ if word_file and terms_file:
         if kanji_file:
             try:
                 kanji_df = load_excel(kanji_file)
-                st.info(f"利用漢字表の列名: {list(kanji_df.columns)}")
                 original_text, kanji_corrections = apply_kanji_table(original_text, kanji_df)
                 st.success("利用漢字表を適用しました！")
                 if kanji_corrections:
