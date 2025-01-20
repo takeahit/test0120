@@ -38,7 +38,7 @@ def extract_text_from_file(file, file_type):
         return ""
 
 # Fuzzy Matching を用いて類似語を検出する関数
-def find_similar_terms(text, terms, threshold):
+def find_similar_terms_with_context(text, terms, threshold):
     detected_terms = []
 
     words = text.split()
@@ -46,7 +46,9 @@ def find_similar_terms(text, terms, threshold):
         matches = process.extract(word, terms, scorer=fuzz.partial_ratio, limit=10)
         for match in matches:
             if match[1] >= threshold and match[1] < 100:  # Include matches above the threshold but exclude exact matches
-                detected_terms.append((word, match[0], match[1]))
+                start_index = text.find(word)
+                context = text[max(0, start_index-10):start_index+10+len(word)]
+                detected_terms.append((word, match[0], match[1], context, start_index))
 
     return detected_terms
 
@@ -83,8 +85,8 @@ def create_corrected_word_file_with_formatting(original_text, corrections):
     return output
 
 # 修正を適用して新しい Word ファイルを作成する関数
-def create_correction_table(detected):
-    correction_table = pd.DataFrame(detected, columns=["原稿内の語", "類似する用語", "類似度"])
+def create_correction_table_with_context(detected):
+    correction_table = pd.DataFrame(detected, columns=["原稿内の語", "類似する用語", "類似度", "文脈", "位置"])
     return correction_table
 
 # 正誤表を使用して修正を適用する関数
@@ -131,14 +133,13 @@ if word_file and (terms_file or correction_file or kanji_file):
 
             # 類似度の閾値を入力
             threshold = st.slider("類似度の閾値を設定してください (50-99):", min_value=50, max_value=99, value=65)
-            detected = find_similar_terms(original_text, terms, threshold)
+            detected = find_similar_terms_with_context(original_text, terms, threshold)
 
             # 結果を表示
             if detected:
                 st.success("類似語が検出されました！")
-                correction_table = create_correction_table(detected)
+                correction_table = create_correction_table_with_context(detected)
                 st.dataframe(correction_table)
-                corrections.extend([(original, correct) for original, correct, _ in detected])
 
                 # 修正箇所を表形式でダウンロード
                 output = BytesIO()
@@ -147,17 +148,8 @@ if word_file and (terms_file or correction_file or kanji_file):
                 st.download_button(
                     label="修正箇所をダウンロード",
                     data=output.getvalue(),
-                    file_name="correction_table.xlsx",
+                    file_name="correction_table_with_context.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                )
-
-                # 修正済みファイルをダウンロード
-                corrected_file = create_corrected_word_file_with_formatting(original_text, corrections)
-                st.download_button(
-                    label="用語集修正済みファイルをダウンロード",
-                    data=corrected_file.getvalue(),
-                    file_name="terms_corrected_document.docx",
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 )
 
             else:
@@ -189,15 +181,6 @@ if word_file and (terms_file or correction_file or kanji_file):
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
 
-                # 修正済みファイルをダウンロード
-                corrected_file = create_corrected_word_file_with_formatting(original_text, corrections_from_table)
-                st.download_button(
-                    label="正誤表修正済みファイルをダウンロード",
-                    data=corrected_file.getvalue(),
-                    file_name="correction_table_corrected_document.docx",
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                )
-
         except Exception as e:
             st.error(f"正誤表の処理中にエラーが発生しました: {e}")
 
@@ -222,15 +205,6 @@ if word_file and (terms_file or correction_file or kanji_file):
                     data=output.getvalue(),
                     file_name="kanji_corrections.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                )
-
-                # 修正済みファイルをダウンロード
-                corrected_file = create_corrected_word_file_with_formatting(original_text, kanji_corrections)
-                st.download_button(
-                    label="利用漢字表修正済みファイルをダウンロード",
-                    data=corrected_file.getvalue(),
-                    file_name="kanji_corrected_document.docx",
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 )
 
         except Exception as e:
