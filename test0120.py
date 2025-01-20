@@ -1,6 +1,7 @@
 import pandas as pd
 from rapidfuzz import fuzz, process
 from docx import Document
+from docx.shared import RGBColor
 from io import BytesIO
 from pydocx import PyDocX  # .doc ファイルを扱うためのライブラリ
 import streamlit as st
@@ -51,7 +52,7 @@ def create_corrected_word_file_with_formatting(original_text, corrections):
         paragraph = doc.add_paragraph()
         start_index = 0
 
-        # Apply corrections with red formatting
+        # Apply corrections with yellow highlighting
         for incorrect, correct in corrections:
             while incorrect in paragraph_text[start_index:]:
                 start_index = paragraph_text.find(incorrect, start_index)
@@ -60,9 +61,9 @@ def create_corrected_word_file_with_formatting(original_text, corrections):
                 # Add text before the match
                 paragraph.add_run(paragraph_text[:start_index])
 
-                # Add the corrected text in red
+                # Add the corrected text with yellow highlighting
                 run = paragraph.add_run(correct)
-                run.font.color.rgb = (255, 0, 0)  # Red color
+                run.font.highlight_color = 6  # Yellow highlighting
 
                 # Update the remaining text
                 paragraph_text = paragraph_text[end_index:]
