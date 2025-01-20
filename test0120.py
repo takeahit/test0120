@@ -109,7 +109,7 @@ def apply_kanji_table(text, kanji_df):
     return text, corrections
 
 # Streamlit アプリケーション
-st.title("用語チェックアプリ")
+st.title("南江堂様用用語チェックサービス（笑）")
 
 st.write("以下のファイルを個別にアップロードしてください:")
 word_file = st.file_uploader("原稿ファイル (Word, DOC, PDF):", type=["docx", "doc", "pdf"])
@@ -152,6 +152,15 @@ if word_file and (terms_file or correction_file or kanji_file):
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
 
+                # 修正済みファイルをダウンロード
+                corrected_file = create_corrected_word_file_with_formatting(original_text, corrections)
+                st.download_button(
+                    label="用語集修正済みファイルをダウンロード",
+                    data=corrected_file.getvalue(),
+                    file_name="terms_corrected_document.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                )
+
             else:
                 st.warning("類似する語は検出されませんでした。")
 
@@ -181,6 +190,15 @@ if word_file and (terms_file or correction_file or kanji_file):
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
 
+                # 修正済みファイルをダウンロード
+                corrected_file = create_corrected_word_file_with_formatting(original_text, corrections_from_table)
+                st.download_button(
+                    label="正誤表修正済みファイルをダウンロード",
+                    data=corrected_file.getvalue(),
+                    file_name="correction_table_corrected_document.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                )
+
         except Exception as e:
             st.error(f"正誤表の処理中にエラーが発生しました: {e}")
 
@@ -207,17 +225,17 @@ if word_file and (terms_file or correction_file or kanji_file):
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
 
+                # 修正済みファイルをダウンロード
+                corrected_file = create_corrected_word_file_with_formatting(original_text, kanji_corrections)
+                st.download_button(
+                    label="利用漢字表修正済みファイルをダウンロード",
+                    data=corrected_file.getvalue(),
+                    file_name="kanji_corrected_document.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                )
+
         except Exception as e:
             st.error(f"利用漢字表の処理中にエラーが発生しました: {e}")
-
-    # 修正済みファイルをWord形式でダウンロード
-    corrected_file = create_corrected_word_file_with_formatting(original_text, corrections)
-    st.download_button(
-        label="修正済みファイルをダウンロード",
-        data=corrected_file.getvalue(),
-        file_name="corrected_document.docx",
-        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    )
 
 else:
     st.warning("原稿ファイルと、用語集、正誤表、利用漢字表のいずれかをアップロードしてください！")
