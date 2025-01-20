@@ -113,9 +113,9 @@ st.markdown("<h1 style='text-align: center;'>南江堂様用用語チェック�
 
 st.write("以下のファイルを個別にアップロードしてください（正誤表と利用漢字表は実質的には同じことをするものです）:")
 word_file = st.file_uploader("原稿ファイル (Word, DOC, PDF):", type=["docx", "doc", "pdf"])
-terms_file = st.file_uploader("用語集ファイル (Excel, 任意):", type=["xlsx"])
-correction_file = st.file_uploader("正誤表ファイル (Excel, 任意):", type=["xlsx"])
-kanji_file = st.file_uploader("利用漢字表ファイル (Excel, 任意):", type=["xlsx"])
+terms_file = st.file_uploader("用語集ファイル (A列に正しい用語を入れたExcel。A列以外には何も入れないでください):", type=["xlsx"])
+correction_file = st.file_uploader("正誤表ファイル (A列に誤った語句をB列にそれに対する正しい語句を入れたExcel。AとB列以外には何も入れないでください):", type=["xlsx"])
+kanji_file = st.file_uploader("利用漢字表ファイル (A列にひらがなを、B列に漢字を入れたExcel。AとB列以外には何も入れないでください):", type=["xlsx"])
 
 if word_file and (terms_file or correction_file or kanji_file):
     # 原稿ファイルの読み込み
