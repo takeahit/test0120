@@ -39,8 +39,8 @@ def extract_text_from_file(file, file_type):
 
 # Fuzzy Matching を用いて類似語を検出する関数
 def find_similar_terms(text, terms, threshold):
-    # ピリオドや句読点で文章を分割し、10文字以上の単語は無視
-    sentences = [sentence.strip() for sentence in text.split('.') if len(sentence.strip()) <= 10]
+    # ピリオドや句読点で文章を分割
+    sentences = [sentence.strip() for sentence in text.split('.')]
     detected_terms = []
 
     for sentence in sentences:
