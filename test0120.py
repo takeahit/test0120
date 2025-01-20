@@ -14,17 +14,22 @@ from io import BytesIO
 from pydocx import PyDocX  # .doc ファイルを扱うためのライブラリ
 import streamlit as st
 
+import subprocess
+
 # Install necessary packages
+def install(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
 try:
     from PyPDF2 import PdfReader  # PDFからテキストを抽出するためのライブラリ
 except ImportError:
-    !pip install PyPDF2
+    install("PyPDF2")
     from PyPDF2 import PdfReader
 
 try:
     import pyngrok
 except ImportError:
-    !pip install pyngrok
+    install("pyngrok")
     import pyngrok
 
 # Excel ファイルを読み込む関数
